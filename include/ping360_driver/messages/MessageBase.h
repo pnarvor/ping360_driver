@@ -9,12 +9,6 @@ namespace ping360 {
 // one byte packing
 #pragma pack(push, 1)
 
-enum PingDeviceType : uint8_t {
-    DeviceUnknown = 0,
-    Ping1D        = 1,
-    Ping360       = 2
-};
-
 struct MessageHeader
 {
     uint8_t  start1;
@@ -28,6 +22,10 @@ struct MessageHeader
         std::memset(this, 0, sizeof(MessageHeader));
         start1 = 'B';
         start2 = 'R';
+    }
+
+    bool is_valid() {
+        return start1 == 'B' && start2 == 'R';
     }
 };
 
@@ -59,9 +57,19 @@ struct Message
     }
     
     const std::vector<uint8_t>& bytes() const { return bytes_; }
-    std::size_t    size() const { return bytes_.size(); }
+    std::size_t size() const {
+        return sizeof(MessageHeader) + this->payload_length() + 2;
+    }
     const uint8_t* data() const { return bytes_.data(); }
     uint8_t*       data()       { return bytes_.data(); }
+
+    void accomodate_for_message(const MessageHeader& header) {
+        //resize bytes_ to accomodate for header.
+        if(bytes_.size() < sizeof(MessageHeader) + 2 + header.payload_length) {
+            bytes_.resize(sizeof(MessageHeader) + 2 + header.payload_length);
+        }
+        this->header() = header;
+    }
 
     const MessageHeader& header() const {
         return *reinterpret_cast<const MessageHeader*>(bytes_.data());
@@ -88,6 +96,10 @@ struct Message
         compute_checksum(bytes_.data());
     }
 
+    bool checksum_valid() const {
+        return this->checksum() == compute_checksum(bytes_.data());
+    }
+
     bool is_valid() const {
         if(this->size() < sizeof(MessageHeader)) {
             // avoid segfault if bytes_ has an invalid size
@@ -96,7 +108,7 @@ struct Message
         if(this->size() < sizeof(MessageHeader) + this->payload_length() + 2) {
             return false;
         }
-        return this->checksum() == compute_checksum(bytes_.data());
+        return this->checksum_valid();
     }
 };
 

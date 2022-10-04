@@ -5,7 +5,8 @@ namespace ping360 {
 using namespace std::placeholders;
 
 PingClient::PingClient(PingLink::Ptr link) :
-    link_(link)
+    link_(link),
+    incomingMessage_(0,0)
 {
     this->initiate_connection();
 }
@@ -48,7 +49,75 @@ void PingClient::initiate_callback(const ErrorCode& err, std::size_t byteCount)
         this->initiate_connection();
     }
 
-    std::cout << protocolVersion_ << std::endl;
+    //std::cout << protocolVersion_ << std::endl;
+    this->get_header();
+}
+
+void PingClient::get_header()
+{
+    this->link_->async_receive(sizeof(incomingHeader_),
+                               (uint8_t*)&incomingHeader_,
+                               std::bind(&PingClient::header_callback, this, _1, _2));
+}
+
+void PingClient::header_callback(const ErrorCode& err, std::size_t byteCount)
+{
+    if(err) {
+        std::ostringstream oss;
+        oss << "PingClient::header_callback : got socket error ("
+            << err << ')';
+        throw std::runtime_error(oss.str());
+    }
+    if(byteCount != sizeof(MessageHeader) || !incomingHeader_.is_valid()) {
+        std::cerr << "Invalid header" << std::endl << std::flush;
+        this->get_header();
+        return;
+    }
+
+    incomingMessage_.accomodate_for_message(incomingHeader_);
+    this->get_payload();
+}
+
+void PingClient::get_payload()
+{
+    this->link_->async_receive(incomingHeader_.payload_length + 2,
+                               incomingMessage_.payload(),
+                               std::bind(&PingClient::payload_callback, this, _1, _2));
+}
+
+void PingClient::payload_callback(const ErrorCode& err, std::size_t byteCount)
+{
+    if(err) {
+        std::ostringstream oss;
+        oss << "PingClient::payload_callback : got socket error ("
+            << err << ')';
+        throw std::runtime_error(oss.str());
+    }
+    if(byteCount != incomingHeader_.payload_length + 2) {
+        std::cerr << "PingClient::payload_callback : "
+                  << "invalid number of byte for expected message.\n"
+                  << incomingHeader_;
+        this->get_header();
+        return;
+    }
+    if(!incomingMessage_.checksum_valid()) {
+        std::cerr << "PingClient::payload_callback : "
+                  << "invalid checksum of received message.\n"
+                  << incomingHeader_ << std::endl;
+        this->get_header();
+        return;
+    }
+    
+    this->message_callback(incomingMessage_);
+    this->get_header();
+}
+
+void PingClient::message_callback(const Message& msg) const
+{
+    std::cout << "Got message !" << std::endl;
+    std::cout << msg.header() << std::endl << std::flush;
 }
 
 } //namespace ping360
+
+

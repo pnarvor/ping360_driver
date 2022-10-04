@@ -24,9 +24,18 @@ class PingClient
     PingLink::Ptr   link_;
     ProtocolVersion protocolVersion_;
 
+    MessageHeader   incomingHeader_;
+    Message         incomingMessage_;
+
     PingClient(PingLink::Ptr link);
 
     void initiate_callback(const ErrorCode& err, std::size_t byteCount);
+
+    void get_header();
+    void header_callback(const ErrorCode& err, std::size_t byteCount);
+
+    void get_payload();
+    void payload_callback(const ErrorCode& err, std::size_t byteCount);
 
     public:
 
@@ -35,6 +44,8 @@ class PingClient
                          unsigned short remotePort);
     void initiate_connection();
     void send(const Message& msg);
+
+    virtual void message_callback(const Message& msg) const;
 };
 
 } //namespace ping360

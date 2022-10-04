@@ -11,6 +11,20 @@ namespace ping360 {
 // one byte packing
 #pragma pack(push, 1)
 
+enum PingDeviceType : uint8_t {
+    DeviceUnknown = 0,
+    Ping1D        = 1,
+    Ping360       = 2
+};
+
+struct Version {
+    uint8_t major;
+    uint8_t minor;
+    uint8_t patch;
+    uint8_t reserved;
+};
+
+
 struct GeneralRequest : public Message
 {
     static constexpr uint16_t MessageId = 6;
@@ -33,13 +47,6 @@ struct GeneralRequest : public Message
 
 struct ProtocolVersion : public Message
 {
-    struct Version {
-        uint8_t version_major;
-        uint8_t version_minor;
-        uint8_t version_patch;
-        uint8_t reserved;
-    };
-
     static constexpr uint16_t MessageId = 5;
     static constexpr int      FixedSize = sizeof(MessageHeader) + 2 + sizeof(Version);
 
@@ -57,10 +64,54 @@ struct ProtocolVersion : public Message
     }
 };
 
+struct DeviceInformation : public Message
+{
+    struct Information {
+        PingDeviceType device_type;
+        uint8_t        device_revision;
+        Version        firmware_version;
+    };
+
+    static constexpr uint16_t MessageId = 4;
+    static constexpr int      FixedSize = sizeof(MessageHeader) + 2 
+                                        + sizeof(Information);
+
+    DeviceInformation() :
+        Message(MessageId, sizeof(Information))
+    {
+        this->update_checksum();
+    }
+
+    const Information& information() const {
+        return *reinterpret_cast<const Information*>(this->payload());
+    }
+    Information& information() {
+        return *reinterpret_cast<Information*>(this->payload());
+    }
+};
+
 
 #pragma pack(pop)
 
 } //namespace ping360
+
+inline std::ostream& operator<<(std::ostream& os, const ping360::Version& version)
+{
+    os << (unsigned int)version.major << '.'
+       << (unsigned int)version.minor << '.'
+       << (unsigned int)version.patch;
+    return os;
+}
+
+inline std::ostream& operator<<(std::ostream& os, const ping360::PingDeviceType& typeId)
+{
+    switch(typeId) {
+        default:      os << "UNKNOWN_DEVICE"; break;
+        case ping360::Ping1D:  os << "PING_1D";        break;
+        case ping360::Ping360: os << "PING_360";       break;
+    }
+    return os;
+}
 
 inline std::ostream& operator<<(std::ostream& os, const ping360::GeneralRequest& msg)
 {
@@ -72,10 +123,16 @@ inline std::ostream& operator<<(std::ostream& os, const ping360::GeneralRequest&
 inline std::ostream& operator<<(std::ostream& os, const ping360::ProtocolVersion& msg)
 {
     os << "ping360::ProtocolVersion :" << std::endl
-       << "  - version : "
-       << (unsigned int)msg.version().version_major << '.'
-       << (unsigned int)msg.version().version_minor << '.'
-       << (unsigned int)msg.version().version_patch;
+       << "  - version : " << msg.version();
+    return os;
+}
+
+inline std::ostream& operator<<(std::ostream& os, const ping360::DeviceInformation& msg)
+{
+    os << "ping360::ProtocolVersion :" << std::endl
+       << "  - device_type      : " << msg.information().device_type
+       << "  - device revision  : " << (unsigned int)msg.information().device_revision
+       << "  - firmware_version : " << msg.information().firmware_version;
     return os;
 }
 

@@ -37,10 +37,11 @@ int main()
 
     service.start();
     
-    //for(int i = 0; i < 10; i++) {
-    //    client->send(GeneralRequest(5));
-    //    getchar();
-    //}
+    for(int i = 0; i < 10; i++) {
+        //client->send(GeneralRequest(5));
+        client->send(GeneralRequest(4));
+        getchar();
+    }
     getchar();
 
     service.stop();
