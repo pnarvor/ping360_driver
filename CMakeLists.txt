@@ -17,5 +17,6 @@ target_link_libraries(ping360_driver INTERFACE
     Boost::system
     Boost::thread
 )
+target_compile_features(ping360_driver PUBLIC cxx_std_14)
 
 add_subdirectory(tests)
