@@ -26,7 +26,7 @@ void ClientUDP::async_receive(std::size_t size, uint8_t* data,
                               ReadHandler handler)
 {
     socket_.async_receive(boost::asio::buffer(data, size), 
-                          std::bind(handler, data,
+                          std::bind(handler,
                                     std::placeholders::_1,
                                     std::placeholders::_2));
 }

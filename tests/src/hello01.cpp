@@ -20,7 +20,7 @@ void handler(ClientUDP::Ptr client, uint8_t* data,
     cout << "Got << " << readCount << " bytes." << endl;
 
     client->async_receive(32, data,
-                          std::bind(handler, client, _1, _2, _3));
+                          std::bind(handler, client, data, _1, _2));
 }
 
 int main()
@@ -31,7 +31,7 @@ int main()
 
     std::vector<uint8_t> buf(32);
     client->async_receive(32, buf.data(),
-                          std::bind(handler, client, _1, _2, _3));
+                          std::bind(handler, client, buf.data(), _1, _2));
 
     service.start();
 
@@ -39,13 +39,14 @@ int main()
     cout << (const Message&)msg << endl;
     cout << msg << endl;
 
-    for(int n = 0; n < msg.bytes_.size(); n++) {
-        cout << " " << hex << (unsigned int)msg.bytes_[n];
+    std::ostringstream oss;
+    for(int n = 0; n < msg.size(); n++) {
+        oss << " " << hex << (unsigned int)msg.data()[n];
     }
-    cout << endl;
+    cout << oss.str() << endl;
 
     for(int i = 0; i < 10; i++) {
-        client->send(msg.bytes_);
+        client->send(msg.bytes());
         getchar();
     }
 

@@ -44,7 +44,11 @@ inline uint16_t compute_checksum(const uint8_t* data)
 
 struct Message
 {
+    protected:
+
     std::vector<uint8_t> bytes_;
+
+    public:
 
     Message(uint16_t msgId, uint16_t payloadSize = 0) :
         bytes_(sizeof(MessageHeader) + payloadSize + 2)
@@ -53,6 +57,11 @@ struct Message
         this->header().payload_length = payloadSize;
         this->header().message_id     = msgId;
     }
+    
+    const std::vector<uint8_t>& bytes() const { return bytes_; }
+    std::size_t    size() const { return bytes_.size(); }
+    const uint8_t* data() const { return bytes_.data(); }
+    uint8_t*       data()       { return bytes_.data(); }
 
     const MessageHeader& header() const {
         return *reinterpret_cast<const MessageHeader*>(bytes_.data());
@@ -66,6 +75,9 @@ struct Message
     uint8_t* payload() {
         return bytes_.data() + sizeof(MessageHeader);
     }
+    uint16_t payload_length() const {
+        return this->header().payload_length;
+    }
     uint16_t checksum() const {
         return *reinterpret_cast<const uint16_t*>(
             this->payload() + this->header().payload_length);
@@ -74,6 +86,17 @@ struct Message
         *reinterpret_cast<uint16_t*>(
             this->payload() + this->header().payload_length) =
         compute_checksum(bytes_.data());
+    }
+
+    bool is_valid() const {
+        if(this->size() < sizeof(MessageHeader)) {
+            // avoid segfault if bytes_ has an invalid size
+            return false;
+        }
+        if(this->size() < sizeof(MessageHeader) + this->payload_length() + 2) {
+            return false;
+        }
+        return this->checksum() == compute_checksum(bytes_.data());
     }
 };
 
@@ -90,7 +113,7 @@ inline std::ostream& operator<<(std::ostream& os, const ping360::MessageHeader& 
 
 inline std::ostream& operator<<(std::ostream& os, const ping360::Message& msg)
 {
-    os << "ping360::Message :" << endl;
+    os << "ping360::Message :" << std::endl;
     {
         os << "  header :";
         std::ostringstream oss;
@@ -101,7 +124,7 @@ inline std::ostream& operator<<(std::ostream& os, const ping360::Message& msg)
             os << "\n  - " << line;
         }
     }
-    os << endl << "  checksum : " << msg.checksum();
+    os << std::endl << "  checksum : " << msg.checksum();
 
     return os;
 }

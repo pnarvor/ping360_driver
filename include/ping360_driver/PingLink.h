@@ -4,6 +4,8 @@
 #include <memory>
 #include <functional>
 
+#include <boost/asio.hpp>
+
 namespace ping360 {
 
 /**
@@ -16,8 +18,7 @@ class PingLink
 
     using Ptr     = std::shared_ptr<PingLink>;
     using ConsPtr = std::shared_ptr<const PingLink>;
-    using ReadHandler = std::function<void(uint8_t*,
-                                           boost::system::error_code,
+    using ReadHandler = std::function<void(boost::system::error_code,
                                            std::size_t)>;
     protected:
 
