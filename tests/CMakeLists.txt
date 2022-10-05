@@ -3,6 +3,7 @@
 list(APPEND ping360_tests
     src/hello01.cpp
     src/message_receive01.cpp
+    src/serial_test01.cpp
 )
 foreach(filename ${ping360_tests})
     get_filename_component(name ${filename} NAME_WE)

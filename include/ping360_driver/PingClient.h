@@ -6,6 +6,7 @@
 #include <ping360_driver/PingLink.h>
 #include <ping360_driver/messages/common.h>
 #include <ping360_driver/ClientUDP.h>
+#include <ping360_driver/ClientSerial.h>
 
 namespace ping360 {
 
@@ -43,6 +44,8 @@ class PingClient
     static Ptr CreateUDP(IoService& service,
                          const std::string& remoteIp,
                          unsigned short remotePort);
+    static Ptr CreateSerial(IoService& service,
+                            const std::string& serialPort);
     void initiate_connection();
     void send(const Message& msg);
 

@@ -8,6 +8,7 @@ message(STATUS "Boost location : ${Boost_INCLUDE_DIRS}")
 add_library(ping360_driver SHARED
     src/AsyncService.cpp
     src/ClientUDP.cpp
+    src/ClientSerial.cpp
     src/PingClient.cpp
 )
 target_include_directories(ping360_driver PUBLIC

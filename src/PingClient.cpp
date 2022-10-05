@@ -18,6 +18,12 @@ PingClient::Ptr PingClient::CreateUDP(IoService& service,
     return Ptr(new PingClient(ClientUDP::Create(service, remoteIp, remotePort)));
 }
 
+PingClient::Ptr PingClient::CreateSerial(IoService& service,
+                                         const std::string& serialPort)
+{
+    return Ptr(new PingClient(ClientSerial::Create(service, serialPort)));
+}
+
 void PingClient::send(const Message& msg)
 {
     if(auto sentCount = link_->send(msg.bytes()) != msg.size()) {
