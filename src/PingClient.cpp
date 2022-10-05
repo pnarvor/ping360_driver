@@ -1,4 +1,5 @@
 #include <ping360_driver/PingClient.h>
+#include <ping360_driver/messages/print_utils.h>
 
 namespace ping360 {
 
@@ -117,8 +118,7 @@ void PingClient::payload_callback(const ErrorCode& err, std::size_t byteCount)
 
 void PingClient::message_callback(const Message& msg) const
 {
-    std::cout << "Got message !" << std::endl;
-    std::cout << msg.header() << std::endl << std::flush;
+    print(std::cout, msg) << std::endl;
 }
 
 } //namespace ping360

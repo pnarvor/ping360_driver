@@ -170,6 +170,13 @@ inline std::ostream& operator<<(std::ostream& os, const ping360::PingParameters&
     return os;
 }
 
+inline std::ostream& operator<<(std::ostream& os, const ping360::SetPing360Id& msg)
+{
+    os << "ping360::SetPing360Id :" << std::endl
+       << "  - device_id : " << msg.device_id();
+    return os;
+}
+
 inline std::ostream& operator<<(std::ostream& os, const ping360::DeviceData& msg)
 {
     os << "ping360::DeviceData :";
@@ -197,5 +204,19 @@ inline std::ostream& operator<<(std::ostream& os, const ping360::Transducer& msg
     }
     return os;
 }
+
+inline std::ostream& operator<<(std::ostream& os, const ping360::Reset& msg)
+{
+    os << "ping360::Reset :" << std::endl
+       << "  - run_bootloader : " << msg.run_bootloader();
+    return os;
+}
+
+inline std::ostream& operator<<(std::ostream& os, const ping360::MotorOff& msg)
+{
+    os << "ping360::MotorOff" << std::endl;
+    return os;
+}
+
 
 #endif //_DEF_PING360_MESSAGES_PING360_MESSAGES_H_
