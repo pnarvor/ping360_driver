@@ -75,11 +75,7 @@ void PingClient::header_callback(const ErrorCode& err, std::size_t byteCount)
     }
 
     incomingMessage_.accomodate_for_message(incomingHeader_);
-    this->get_payload();
-}
-
-void PingClient::get_payload()
-{
+    bytesReceived_ = 0;
     this->link_->async_receive(incomingHeader_.payload_length + 2,
                                incomingMessage_.payload(),
                                std::bind(&PingClient::payload_callback, this, _1, _2));
@@ -93,11 +89,12 @@ void PingClient::payload_callback(const ErrorCode& err, std::size_t byteCount)
             << err << ')';
         throw std::runtime_error(oss.str());
     }
-    if(byteCount != incomingHeader_.payload_length + 2) {
-        std::cerr << "PingClient::payload_callback : "
-                  << "invalid number of byte for expected message.\n"
-                  << incomingHeader_;
-        this->get_header();
+    bytesReceived_ += byteCount;
+    if(bytesReceived_ < incomingHeader_.payload_length + 2) {
+        // did not get full payload getting remaining data
+        this->link_->async_receive(incomingHeader_.payload_length + 2 - bytesReceived_,
+                                   incomingMessage_.payload() + bytesReceived_,
+                                   std::bind(&PingClient::payload_callback, this, _1, _2));
         return;
     }
     if(!incomingMessage_.checksum_valid()) {
