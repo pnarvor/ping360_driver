@@ -51,11 +51,11 @@ void PingClient::initiate_callback(const ErrorCode& err, std::size_t byteCount)
         throw std::runtime_error(oss.str());
     }
     else if(byteCount != ProtocolVersion::FixedSize || !protocolVersion_.is_valid()) {
-        std::cerr << "PingClient::initiate_callback : invalid ProtocolVersion message";
+        std::cerr << "PingClient::initiate_callback : invalid ProtocolVersion message" << std::endl;
         this->initiate_connection();
     }
 
-    //std::cout << protocolVersion_ << std::endl;
+    std::cout << protocolVersion_ << std::endl;
     this->get_header();
 }
 

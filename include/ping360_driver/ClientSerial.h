@@ -31,19 +31,9 @@ class ClientSerial : public PingLink
     SerialPort serial_;
     ReadBuffer readBuffer_;
 
-    //std::vector<uint8_t> buffer_;
-    //std::vector<uint8_t>::const_iterator bufferEnd_;
-    //std::vector<uint8_t>::const_iterator bufferBegin_;
-
     ClientSerial(IoService& service,
                  const std::string& serialPort);
 
-    //void receive_callback(ReadHandler handler,
-    //                      std::size_t requestedSize,
-    //                      uint8_t*    requestOutput,
-    //                      const boost::system::error_code& err,
-    //                      std::size_t readCount);
-    
     public:
     
     static Ptr Create(IoService& service,
@@ -55,10 +45,6 @@ class ClientSerial : public PingLink
     virtual std::size_t send(std::size_t size, const uint8_t* data);
     using PingLink::send; //for access to send(std::vector) method
                           //needed because overloading of send method
-
-    //std::size_t available() const { return readBuffer_.size(); }
-    //std::size_t consume(std::size_t size, uint8_t* dst);
-
     void reset();
     boost::system::error_code flush(FlushType flushType = FlushBoth);
 };

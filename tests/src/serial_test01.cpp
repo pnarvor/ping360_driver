@@ -13,17 +13,16 @@ int main()
     AsyncService service;
 
     auto client = PingClient::CreateSerial(*service.io_service(),
-                                           "/dev/ttyACM0");
+                                           "/dev/ttyUSB0");
     service.start();
     
     for(int i = 0; i < 10; i++) {
-        client->send(GeneralRequest(5));
         getchar();
+        //client->send(GeneralRequest(5));
         //client->send(GeneralRequest(4));
-        //client->send(Transducer());
-        //getchar();
-        //client->send(MotorOff());
-        //getchar();
+        client->send(Transducer());
+        getchar();
+        client->send(MotorOff());
     }
 
     getchar();

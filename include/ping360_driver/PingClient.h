@@ -20,7 +20,7 @@ class PingClient
     using IoService = boost::asio::io_service;
     using ErrorCode = boost::system::error_code;
 
-    //protected:
+    protected:
 
     PingLink::Ptr   link_;
     ProtocolVersion protocolVersion_;

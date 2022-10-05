@@ -4,13 +4,22 @@
 
 namespace ping360 {
 
+boost::asio::ip::address make_address(const std::string& str)
+{
+    #ifdef BOOST_OLD_VERSION
+    return boost::asio::ip::address::from_string(str);
+    #else
+    return boost::asio::ip::make_address(str);
+    #endif
+}
+
 ClientUDP::ClientUDP(IoService& service,
                      const std::string& remoteIp,
                      unsigned short remotePort,
                      unsigned int bufferSize) :
     PingLink(),
     socket_(service),
-    remote_(boost::asio::ip::make_address(remoteIp), remotePort),
+    remote_(make_address(remoteIp), remotePort),
     buffer_(bufferSize),
     bufferBegin_(buffer_.begin()),
     bufferEnd_(buffer_.begin())
