@@ -21,9 +21,10 @@ int main()
         //client->send(GeneralRequest(4));
         client->send(Transducer());
         getchar();
+        client->send(MotorOff());
+        getchar();
     }
-    getchar();
-
+    
     service.stop();
 
     return 0;

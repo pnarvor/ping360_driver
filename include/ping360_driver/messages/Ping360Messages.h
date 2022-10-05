@@ -9,16 +9,39 @@ namespace ping360 {
 // one byte packing
 #pragma pack(push, 1)
 
+struct PingParameters {
+    uint8_t  mode;
+    uint8_t  gain_setting;
+    uint16_t angle;
+    uint16_t transmit_duration;
+    uint16_t sample_period;
+    uint16_t transmit_frequency;
+    uint16_t number_of_samples;
+};
+
+struct SetPing360Id : public Message
+{
+    static constexpr uint16_t MessageId = 2000;
+    static constexpr int      FixedSize = sizeof(MessageHeader) + 2 + 2*sizeof(uint8_t);
+
+    SetPing360Id(uint8_t deviceId) :
+        Message(MessageId, 2*sizeof(uint8_t))
+    {
+        this->device_id() = deviceId;
+        this->update_checksum();
+    }
+    
+    uint8_t device_id() const {
+        return *reinterpret_cast<const uint8_t*>(this->payload());
+    }
+    uint8_t& device_id() {
+        return *reinterpret_cast<uint8_t*>(this->payload());
+    }
+};
+
 struct DeviceData : public Message
 {
-    struct Metadata {
-        uint8_t  mode;
-        uint8_t  gain_setting;
-        uint16_t angle;
-        uint16_t transmit_duration;
-        uint16_t sample_period;
-        uint16_t transmit_frequency;
-        uint16_t number_of_samples;
+    struct Metadata : public PingParameters {
         uint16_t data_length;
     };
 
@@ -33,6 +56,12 @@ struct DeviceData : public Message
         this->update_checksum();
     }
 
+    const PingParameters& ping_parameters() const {
+        return *reinterpret_cast<const PingParameters*>(this->payload());
+    }
+    PingParameters& ping_parameters() {
+        return *reinterpret_cast<PingParameters*>(this->payload());
+    }
     const Metadata& metadata() const {
         return *reinterpret_cast<const Metadata*>(this->payload());
     }
@@ -49,14 +78,7 @@ struct DeviceData : public Message
 
 struct Transducer : public Message
 {
-    struct Config {
-        uint8_t  mode;
-        uint8_t  gain_setting;
-        uint16_t angle;
-        uint16_t transmit_duration;
-        uint16_t sample_period;
-        uint16_t transmit_frequency;
-        uint16_t number_of_samples;
+    struct Config : public PingParameters {
         uint8_t  transmit;
         uint8_t  reserved;
     };
@@ -86,6 +108,12 @@ struct Transducer : public Message
         this->update_checksum();
     }
 
+    const PingParameters& ping_parameters() const {
+        return *reinterpret_cast<const PingParameters*>(this->payload());
+    }
+    PingParameters& ping_parameters() {
+        return *reinterpret_cast<PingParameters*>(this->payload());
+    }
     const Config& config() const {
         return *reinterpret_cast<const Config*>(this->payload());
     }
@@ -94,8 +122,80 @@ struct Transducer : public Message
     }
 };
 
+struct Reset : public Message
+{
+    static constexpr uint16_t MessageId = 2600;
+    static constexpr int      FixedSize = sizeof(MessageHeader) + 2 + 2*sizeof(uint8_t);
+
+    Reset(uint8_t runBootloader = 1) :
+        Message(MessageId, 2*sizeof(uint8_t))
+    {
+        this->run_bootloader() = runBootloader;
+        this->update_checksum();
+    }
+    
+    uint8_t run_bootloader() const {
+        return *reinterpret_cast<const uint8_t*>(this->payload());
+    }
+    uint8_t& run_bootloader() {
+        return *reinterpret_cast<uint8_t*>(this->payload());
+    }
+};
+
+struct MotorOff : public Message
+{
+    static constexpr uint16_t MessageId = 2903;
+    static constexpr int      FixedSize = sizeof(MessageHeader) + 2;
+
+    MotorOff() :
+        Message(MessageId, 0)
+    {
+        this->update_checksum();
+    }
+};
+
 #pragma pack(pop)
 
 } //namespace ping360
+
+inline std::ostream& operator<<(std::ostream& os, const ping360::PingParameters& params)
+{
+    os <<   "mode               : " << (unsigned int)params.mode
+       << "\ngain_setting       : " << (unsigned int)params.gain_setting
+       << "\nangle              : " << params.angle
+       << "\ntransmit_duration  : " << params.transmit_duration
+       << "\nsample_period      : " << params.sample_period
+       << "\ntransmit_frequency : " << params.transmit_frequency
+       << "\nnumber_of_samples  : " << params.number_of_samples;
+    return os;
+}
+
+inline std::ostream& operator<<(std::ostream& os, const ping360::DeviceData& msg)
+{
+    os << "ping360::DeviceData :";
+    std::ostringstream oss;
+    oss << msg.ping_parameters()
+        << "\ndata_length        : " << msg.metadata().data_length;
+    std::istringstream iss(oss.str());
+    std::string line;
+    for(; std::getline(iss, line); ) {
+        os << "\n  - " << line;
+    }
+    return os;
+}
+
+inline std::ostream& operator<<(std::ostream& os, const ping360::Transducer& msg)
+{
+    os << "ping360::Transducer :";
+    std::ostringstream oss;
+    oss << msg.ping_parameters()
+        << "\ntransmit           : " << (unsigned int)msg.config().transmit;
+    std::istringstream iss(oss.str());
+    std::string line;
+    for(; std::getline(iss, line); ) {
+        os << "\n  - " << line;
+    }
+    return os;
+}
 
 #endif //_DEF_PING360_MESSAGES_PING360_MESSAGES_H_
